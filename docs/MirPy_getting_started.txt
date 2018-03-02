@@ -1,0 +1,107 @@
+Getting started
+===============
+
+MirPy modules list is:
+
+MirPy
+clist
+contacts
+database
+messaging
+mirandamisc
+popups
+status
+
+Start with typing in console:
+
+help()
+
+import database
+help(database)
+help(database.ContactGetCount)
+
+Now you get the idea.
+
+Debugging
+=========
+Your script will have bugs. No offense.
+You'll wish to debug it without restarting Miranda.
+For this, do in console:
+
+<your module name>.OnMirPyClose() # if you do some deinitialization
+reload <your module name>
+
+Typical tasks
+=============
+
+In order to do something you'll need a way to run the functionality,
+and to know a proper moment for it.
+For one-time tasks like importing history from other IMs you can call your
+functions directly, like ExportBirthdays.py does. Just write a function in
+a script:
+
+-----------------------------------------------------------------------------
+def ExportBirthdays(fileName = "birthdays.bdays"):
+...
+-----------------------------------------------------------------------------
+
+and call it from console:
+
+-----------------------------------------------------------------------------
+import ExportBirthdays
+ExportBirthdays.ExportBirthdays()
+-----------------------------------------------------------------------------
+
+For more complex cases, you'll need a menu item or a contact event.
+Let's take a sample script that switches 
+In order to add a menu item, use clist.AddContactMenuItem().
+
+More complete example:
+-----------------------------------------------------------------------------
+CLIST_MENU_SERVICE = "CList/Database/SwitchIgnoreOnline"
+
+def AddContactMenu():
+name = "Online notification"
+position = 6 # ???
+service = CLIST_MENU_SERVICE
+owner = None
+flags = 32 #notonlist
+icon = 0
+clist.AddContactMenuItem(name, position, service, owner, flags, icon)
+-----------------------------------------------------------------------------
+
+then call AddContactMenu() on script load.
+Do not forget to unregister the service on unload:
+
+-----------------------------------------------------------------------------
+def OnMirPyClose():
+MirPy.DestroyService(CLIST_MENU_SERVICE)
+-----------------------------------------------------------------------------
+
+After that you need a service that will be called. Read further:
+
+Providing a service
+===================
+
+It's like:
+
+-----------------------------------------------------------------------------
+def OnContactMenu(hContact, lParam = 0):
+"""the function to be called as your service"""
+ignore = GetContactIgnore(hContact)
+SetContactIgnore(hContact, not ignore)
+-----------------------------------------------------------------------------
+
+# and in main block of script:
+-----------------------------------------------------------------------------
+MirPy.CreateService(CLIST_MENU_SERVICE, OnContactMenu)
+-----------------------------------------------------------------------------
+
+where OnContactMenu() is the function to be used for service callback.
+You can only use integers and strings as parameters to your callback - there's 
+no mapping from Python to C structures.
+
+Built-in services reference
+===========================
+Every callback function you provide has (hParam, lParam) parameters. For 
+what these are, see Miranda sources or MirPy sources.
